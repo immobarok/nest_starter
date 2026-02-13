@@ -7,20 +7,11 @@ import { SetMetadata } from '@nestjs/common';
  * prevents typos and enables IDE auto-complete.
  */
 export enum Role {
-  /** Full system access – manage users, settings, billing, etc. */
-  SUPER_ADMIN = 'super_admin',
-
-  /** Administrative access – manage resources and users. */
-  ADMIN = 'admin',
-
-  /** Can review, approve, or reject content and actions. */
-  MODERATOR = 'moderator',
-
-  /** Standard authenticated user. */
-  USER = 'user',
-
-  /** Read-only access, typically for third-party integrations. */
-  VIEWER = 'viewer',
+  SUPER_ADMIN = 'SUPER_ADMIN',
+  ADMIN = 'ADMIN',
+  MODERATOR = 'MODERATOR',
+  USER = 'USER',
+  VIEWER = 'VIEWER',
 }
 
 /**

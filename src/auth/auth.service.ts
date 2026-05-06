@@ -6,13 +6,11 @@ import {
 } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import * as bcrypt from 'bcrypt';
-import { v4 as uuidv4 } from 'uuid';
 import { PrismaService } from '../prisma/prisma.service';
 import { RedisService } from '../redis/redis.service';
 import { MailService } from '../mail/mail.service';
 import {
   RegisterDto,
-  LoginDto,
   VerifyEmailDto,
   ForgotPasswordDto,
   ResetPasswordDto,
@@ -49,25 +47,12 @@ export class AuthService {
         firstName: dto.firstName,
         lastName: dto.lastName,
         role: Role.USER, // Default role
+        isVerified: true, // Auto-verify
+        verifiedAt: new Date(),
       },
     });
 
-    const otp = this.generateOtp();
-    await this.redis.set(
-      `verify_email:${user.email}`,
-      otp,
-      Number(process.env.OTP_EXPIRY_SECONDS),
-    );
-
-    // Fire-and-forget: don't block the response waiting for SMTP
-    this.mail.sendVerificationOtp(user.email, otp).catch((err) => {
-      this.logger.error(
-        `Failed to send verification email to ${user.email}`,
-        err.stack,
-      );
-    });
-
-    return { message: 'User registered. Please check email for OTP.' };
+    return { message: 'User registered successfully.' };
   }
 
   async validateUser(email: string, pass: string): Promise<any> {
@@ -81,10 +66,6 @@ export class AuthService {
   }
 
   async login(user: any) {
-    if (!user.isVerified) {
-      throw new UnauthorizedException('Email not verified');
-    }
-
     const payload = {
       sub: user.id,
       email: user.email,

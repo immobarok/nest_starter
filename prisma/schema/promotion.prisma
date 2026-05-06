@@ -1,0 +1,47 @@
+model Offer {
+  id            String       @id @default(cuid())
+  title         String
+  description   String?
+  image         String?
+  discountType  DiscountType
+  discountValue Decimal      @db.Decimal(10, 2)
+  startDate     DateTime
+  endDate       DateTime
+  isActive      Boolean      @default(true)
+
+  products ProductOffer[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model ProductOffer {
+  id String @id @default(cuid())
+
+  productId String
+  product   Product @relation(fields: [productId], references: [id], onDelete: Cascade)
+
+  offerId String
+  offer   Offer   @relation(fields: [offerId], references: [id], onDelete: Cascade)
+
+  @@unique([productId, offerId])
+}
+
+model PromoCode {
+  id             String       @id @default(cuid())
+  code           String       @unique
+  description    String?
+  discountType   DiscountType
+  discountValue  Decimal      @db.Decimal(10, 2)
+  minOrderAmount Decimal?     @db.Decimal(10, 2)
+  maxUses        Int?
+  usedCount      Int          @default(0)
+  startDate      DateTime
+  endDate        DateTime
+  isActive       Boolean      @default(true)
+
+  orders Order[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}

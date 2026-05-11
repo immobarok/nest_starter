@@ -53,30 +53,30 @@ export class HttpExceptionFilter implements ExceptionFilter {
       | string
       | undefined;
 
-    // Normalise the message regardless of how the exception was constructed
+    const isProduction = process.env.NODE_ENV === 'production';
+
+    // Normalise the message and handle validation errors
     let message: string;
+    let errors: any[] | undefined = undefined;
+
     if (typeof exceptionResponse === 'string') {
       message = exceptionResponse;
-    } else if (
-      typeof exceptionResponse === 'object' &&
-      exceptionResponse !== null
-    ) {
-      const msg = (exceptionResponse as any).message;
-      message = Array.isArray(msg) ? msg.join('; ') : (msg ?? exception.message);
+    } else if (typeof exceptionResponse === 'object' && exceptionResponse !== null) {
+      message = (exceptionResponse as any).message || exception.message;
     } else {
       message = exception.message;
     }
 
-    const isProduction = process.env.NODE_ENV === 'production';
-
     const body: any = {
       success: false,
       statusCode,
-      message,
+      message: Array.isArray((exceptionResponse as any).message) 
+        ? (exceptionResponse as any).message 
+        : message,
+      error: exception.name.replace('Exception', '').replace(/([A-Z])/g, ' $1').trim(),
     };
 
     if (!isProduction) {
-      body.error = exception.name;
       body.path = request.originalUrl;
       body.timestamp = new Date().toISOString();
       if (correlationId) {

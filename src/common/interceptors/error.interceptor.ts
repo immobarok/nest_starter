@@ -72,15 +72,27 @@ export class ErrorInterceptor implements NestInterceptor {
         // Ensure the HTTP response carries the correct status code
         response.status(statusCode);
 
-        const body: ApiErrorResponse = {
+        const isProduction = process.env.NODE_ENV === 'production';
+        let rawMessage: any = null;
+
+        if (error instanceof HttpException) {
+          rawMessage = (error.getResponse() as any).message;
+        }
+
+        const body: any = {
           success: false,
           statusCode,
-          message: Array.isArray(message) ? message.join('; ') : message,
-          error: errorName,
-          path: request.originalUrl,
-          timestamp: new Date().toISOString(),
-          ...(correlationId && { correlationId }),
+          message: Array.isArray(rawMessage) ? rawMessage : message,
+          error: errorName.replace('Exception', '').replace(/([A-Z])/g, ' $1').trim(),
         };
+
+        if (!isProduction) {
+          body.path = request.originalUrl;
+          body.timestamp = new Date().toISOString();
+          if (correlationId) {
+            body.correlationId = correlationId;
+          }
+        }
 
         return throwError(() => new HttpException(body, statusCode));
       }),

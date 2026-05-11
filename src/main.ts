@@ -2,10 +2,13 @@ import { NestFactory } from '@nestjs/core';
 import { Logger, ValidationPipe, VersioningType } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { AppModule } from './app.module';
-import { HttpExceptionFilter, AllExceptionsFilter } from './common/filter';
+import {
+  HttpExceptionFilter,
+  AllExceptionsFilter,
+  ValidationExceptionFilter,
+} from './common/filter';
 
 async function bootstrap() {
-  // ── Create Application ─────────────────────────────────────
   const app = await NestFactory.create(AppModule, {
     logger:
       process.env.NODE_ENV === 'production'
@@ -27,7 +30,6 @@ async function bootstrap() {
     defaultVersion: '1',
   });
 
-  // ── CORS ───────────────────────────────────────────────────
   const allowedOrigins = configService.get<string>('CORS_ORIGINS', '*');
   app.enableCors({
     origin: allowedOrigins === '*' ? true : allowedOrigins.split(','),
@@ -57,12 +59,13 @@ async function bootstrap() {
   );
 
   // ── Global Filters (outermost → innermost) ─────────────────
-  app.useGlobalFilters(new AllExceptionsFilter(), new HttpExceptionFilter());
+  app.useGlobalFilters(
+    new AllExceptionsFilter(),
+    new HttpExceptionFilter(),
+  );
 
-  // ── Graceful Shutdown ──────────────────────────────────────
   app.enableShutdownHooks();
 
-  // ── Trust Proxy (for correct IP behind load-balancers) ─────
   const expressApp = app.getHttpAdapter().getInstance();
   expressApp.set('trust proxy', 1);
 

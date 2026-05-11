@@ -40,14 +40,14 @@ export class AuthService {
     const salt = await bcrypt.genSalt();
     const hash = await bcrypt.hash(dto.password, salt);
 
-    const user = await this.prisma.user.create({
+    await this.prisma.user.create({
       data: {
         email: dto.email,
         password: hash,
         firstName: dto.firstName,
         lastName: dto.lastName,
-        role: Role.USER, // Default role
-        isVerified: true, // Auto-verify
+        role: Role.USER,
+        isVerified: true,
         verifiedAt: new Date(),
       },
     });

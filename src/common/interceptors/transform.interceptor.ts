@@ -76,15 +76,24 @@ export class TransformInterceptor<T> implements NestInterceptor<
     const request = httpCtx.getRequest<Request>();
     const response = httpCtx.getResponse();
 
+    const isProduction = process.env.NODE_ENV === 'production';
+
     return next.handle().pipe(
-      map((data) => ({
-        success: true,
-        statusCode: response.statusCode,
-        message: this.getStatusMessage(response.statusCode),
-        path: request.originalUrl,
-        timestamp: new Date().toISOString(),
-        data,
-      })),
+      map((data) => {
+        const result: any = {
+          success: true,
+          statusCode: response.statusCode,
+          message: this.getStatusMessage(response.statusCode),
+          data,
+        };
+
+        if (!isProduction) {
+          result.path = request.originalUrl;
+          result.timestamp = new Date().toISOString();
+        }
+
+        return result;
+      }),
     );
   }
 

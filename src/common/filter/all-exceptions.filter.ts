@@ -45,15 +45,22 @@ export class AllExceptionsFilter implements ExceptionFilter {
       exception instanceof Error ? exception.stack : String(exception),
     );
 
-    const body: ErrorResponseBody = {
+    const isProduction = process.env.NODE_ENV === 'production';
+    
+    const body: any = {
       success: false,
       statusCode: HttpStatus.INTERNAL_SERVER_ERROR,
       message: 'An unexpected error occurred',
-      error: 'InternalServerError',
-      path: request.originalUrl,
-      timestamp: new Date().toISOString(),
-      ...(correlationId && { correlationId }),
     };
+
+    if (!isProduction) {
+      body.error = 'InternalServerError';
+      body.path = request.originalUrl;
+      body.timestamp = new Date().toISOString();
+      if (correlationId) {
+        body.correlationId = correlationId;
+      }
+    }
 
     response.status(HttpStatus.INTERNAL_SERVER_ERROR).json(body);
   }

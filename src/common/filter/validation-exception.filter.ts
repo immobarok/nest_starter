@@ -77,16 +77,25 @@ export class ValidationExceptionFilter implements ExceptionFilter {
       `[${correlationId ?? 'N/A'}] Validation failed: ${request.method} ${request.originalUrl} – ${summary}`,
     );
 
-    response.status(status).json({
+    const isProduction = process.env.NODE_ENV === 'production';
+
+    const body: any = {
       success: false,
       statusCode: status,
-      error: 'ValidationError',
       message: summary,
       errors,
-      path: request.originalUrl,
-      timestamp: new Date().toISOString(),
-      ...(correlationId && { correlationId }),
-    });
+    };
+
+    if (!isProduction) {
+      body.error = 'ValidationError';
+      body.path = request.originalUrl;
+      body.timestamp = new Date().toISOString();
+      if (correlationId) {
+        body.correlationId = correlationId;
+      }
+    }
+
+    response.status(status).json(body);
   }
 
   /**

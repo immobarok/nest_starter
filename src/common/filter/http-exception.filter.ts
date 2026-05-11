@@ -3,7 +3,6 @@ import {
   Catch,
   ExceptionFilter,
   HttpException,
-  HttpStatus,
   Logger,
 } from '@nestjs/common';
 import { Request, Response } from 'express';
@@ -68,15 +67,22 @@ export class HttpExceptionFilter implements ExceptionFilter {
       message = exception.message;
     }
 
-    const body: ErrorResponseBody = {
+    const isProduction = process.env.NODE_ENV === 'production';
+
+    const body: any = {
       success: false,
       statusCode,
       message,
-      error: exception.name,
-      path: request.originalUrl,
-      timestamp: new Date().toISOString(),
-      ...(correlationId && { correlationId }),
     };
+
+    if (!isProduction) {
+      body.error = exception.name;
+      body.path = request.originalUrl;
+      body.timestamp = new Date().toISOString();
+      if (correlationId) {
+        body.correlationId = correlationId;
+      }
+    }
 
     this.logger.warn(
       `[${correlationId ?? 'N/A'}] ${request.method} ${request.originalUrl} → ${statusCode} ${message}`,

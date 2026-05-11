@@ -24,6 +24,7 @@ import { APP_GUARD } from '@nestjs/core';
 import { JwtAuthGuard } from './auth/guards/jwt-auth.guard';
 import { RolesGuard } from './auth/guards/roles.guard';
 import { UploadModule } from './uplaod/upload.module';
+import { CategoriesModule } from './categories/categories.module';
 
 @Module({
   imports: [
@@ -34,6 +35,7 @@ import { UploadModule } from './uplaod/upload.module';
     MailModule,
     CloudinaryModule,
     UploadModule,
+    CategoriesModule,
   ],
   controllers: [AppController],
   providers: [
